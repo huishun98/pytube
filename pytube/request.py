@@ -26,7 +26,7 @@ def _execute_request(url, method=None, headers=None):
     return urlopen(request)  # nosec
 
 
-def get(url, extra_headers=None):
+def get(url, request_headers=None):
     """Send an http GET request.
 
     :param str url:
@@ -37,9 +37,9 @@ def get(url, extra_headers=None):
     :returns:
         UTF-8 encoded string of response
     """
-    if extra_headers is None:
-        extra_headers = {}
-    return _execute_request(url, headers=extra_headers).read().decode("utf-8")
+    if request_headers is None:
+        request_headers = {}
+    return _execute_request(url, headers=request_headers).read().decode("utf-8")
 
 
 def seq_stream(url, chunk_size=default_chunk_size, range_size=default_range_size):

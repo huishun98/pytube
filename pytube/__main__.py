@@ -48,6 +48,7 @@ class YouTube:
         on_progress_callback: Optional[Callable[[Any, bytes, int], None]] = None,
         on_complete_callback: Optional[Callable[[Any, Optional[str]], None]] = None,
         proxies: Dict[str, str] = None,
+        request_headers: Dict[str, str] = None,
     ):
         """Construct a :class:`YouTube <YouTube>`.
 
@@ -65,6 +66,8 @@ class YouTube:
         """
         self.js: Optional[str] = None  # js fetched by js_url
         self.js_url: Optional[str] = None  # the url to the js, parsed from watch html
+
+        self.request_headers = request_headers
 
         # note: vid_info may eventually be removed. It sounds like it once had
         # additional formats, but that doesn't appear to still be the case.
@@ -199,13 +202,13 @@ class YouTube:
 
         :rtype: None
         """
-        self.watch_html = request.get(url=self.watch_url)
+        self.watch_html = request.get(url=self.watch_url, request_headers=self.request_headers)
         self.check_availability()
         self.age_restricted = extract.is_age_restricted(self.watch_html)
 
         if self.age_restricted:
             if not self.embed_html:
-                self.embed_html = request.get(url=self.embed_url)
+                self.embed_html = request.get(url=self.embed_url, request_headers=self.request_headers)
             self.vid_info_url = extract.video_info_url_age_restricted(
                 self.video_id, self.watch_url
             )
@@ -218,12 +221,12 @@ class YouTube:
 
         self.initial_data = extract.initial_data(self.watch_html)
 
-        self.vid_info_raw = request.get(self.vid_info_url)
+        self.vid_info_raw = request.get(self.vid_info_url, request_headers=self.request_headers)
 
         # If the js_url doesn't match the cached url, fetch the new js and update
         #  the cache; otherwise, load the cache.
         if pytube.__js_url__ != self.js_url:
-            self.js = request.get(self.js_url)
+            self.js = request.get(self.js_url, request_headers=self.request_headers)
             pytube.__js__ = self.js
             pytube.__js_url__ = self.js_url
         else:
@@ -263,7 +266,7 @@ class YouTube:
             .get("playerCaptionsTracklistRenderer", {})
             .get("captionTracks", [])
         )
-        return [Caption(track) for track in raw_tracks]
+        return [Caption(track, self.request_headers) for track in raw_tracks]
 
     @property
     def captions(self) -> CaptionQuery:

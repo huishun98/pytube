@@ -15,7 +15,7 @@ from pytube.helpers import target_directory
 class Caption:
     """Container for caption tracks."""
 
-    def __init__(self, caption_track: Dict):
+    def __init__(self, caption_track: Dict, request_headers: Dict):
         """Construct a :class:`Caption <Caption>`.
 
         :param dict caption_track:
@@ -29,11 +29,12 @@ class Caption:
         # English -> vssId: .en, languageCode: en
         # English (auto-generated) -> vssId: a.en, languageCode: en
         self.code = self.code.strip('.')
+        self.request_headers = request_headers
 
     @property
     def xml_captions(self) -> str:
         """Download the xml caption tracks."""
-        return request.get(self.url)
+        return request.get(self.url, request_headers=self.request_headers)
 
     def generate_srt_captions(self) -> str:
         """Generate "SubRip Subtitle" captions.
